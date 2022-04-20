@@ -1,0 +1,95 @@
+class Arbre:
+    def __init__(self, r, g=None,d=None):
+        self.racine=r
+        self.g=g
+        self.d=d
+
+    def val(self):
+        return self.racine[1]
+        
+    def afficher(self,n=0):
+        if self.d != None:
+            self.d.afficher(n+1)
+
+        print("  "*n, self.racine)
+
+        if self.g != None:
+            self.g.afficher(n+1)
+
+    def parcoursInf(self,dico={}, chemin=""):
+        if self.d==None and self.g==None:
+            dico[self.racine[0]]=chemin
+
+        if self.g!=None:
+            self.g.parcoursInf(dico,chemin+"0")
+
+        if self.d!=None:
+            self.d.parcoursInf(dico,chemin+"1")
+
+        return dico
+
+
+def coder(dico, mess):
+    messCode=""
+    for lettre in mess:
+        messCode+=dico[lettre]
+    return messCode
+
+def compteLettre(mess):
+    dico={}
+    for lettre in mess:
+        if lettre in dico.keys():
+            dico[lettre]+=1
+        else :
+            dico[lettre]=1
+    
+    return dico
+
+def decode(dico, messCode):
+    dico = {v: k for k, v in dico.items()} # Renverse le dictionnaire
+    mess=""
+    
+    i=0
+    while i<len(messCode): # Parcours tous les bits
+        bits=messCode[i] # bits de la lettre recherchée
+        while not bits in dico: # si assemblage bit correspond pas a une lettre
+            i+=1
+            bits+=messCode[i] # On rajoute un bit
+        mess+=dico[bits] # On sauvegarde la lettre
+        i+=1 # On passe au bit suivant
+
+    return mess
+
+
+def messToDico(mess):
+    nbLettreDico=compteLettre(mess)
+    feuilles=[]    
+    for lettre, nombre in nbLettreDico.items():
+        feuilles.append(Arbre((lettre,nombre)))
+        
+    while len(feuilles)>1:
+        m1, m2 = Arbre(('',10000)), Arbre(('',10000))
+        for i in range(len(feuilles)):
+            if feuilles[i].val() <= m1.val():
+                m1, m2 = feuilles[i], m1
+            elif feuilles[i].val() < m2.val():
+                m2 = feuilles[i]
+        
+        # Creer un arbre contenant les 2 petits arbres
+        valeur=m2.val()+m1.val()
+        feuilles.append(Arbre(("",valeur),m2,m1))
+
+        # Supprimer les 2 petits arbres
+        feuilles.remove(m2)
+        feuilles.remove(m1)
+    
+    dico=feuilles[0].parcoursInf()
+    print(dico)
+    msg=coder(dico, mess)
+    return dico, msg
+
+
+#print("BABAS => " + messToDico("BABAS"))
+a,b=messToDico("COUCOU TOI")
+print("COUCOU TOI => " + decode(a,b))
+#print("AAAA => " + messToDico("AAAA"))
